@@ -1,0 +1,49 @@
+module fifo #(parameter DEPTH =32, DATA_WIDTH =8)
+(input clk,rd,wr,rst,
+input [DATA_WIDTH-1:0] data_in,
+output  reg [DATA_WIDTH-1:0] data_out,
+output full,empty);
+reg [7:0]mem[DEPTH-1:0];
+parameter PTR_WIDTH =$clog2(DEPTH); //pointer width of read and write pointers
+
+reg [PTR_WIDTH:0] wr_ptr,rd_ptr; //one extra bit to check the fifo full and fifi empty condition
+reg last_bit;
+
+always@(posedge clk)
+begin
+if(rst)begin
+data_out<=0;
+full <= 0;
+empty <= 0;
+wr_ptr <= 0;
+rd_ptr <= 0;
+end
+int size =mem.size();
+for(i=0;i<size;i++)begin
+mem[i] <= 0;
+end
+if(wr && !full)begin
+mem[wr_ptr] <= data_in;
+wr_ptr =wr_ptr + 1;
+end
+if(rd && !empty)begin
+data_out <=mem[rd_ptr];
+rd_ptr = rd_ptr + 1;
+end
+last_bit = wr_ptr[PTR_WIDTH] ^ rd_ptr[PTR_WIDTH]; 
+//Full condition: MSB of write and read pointers are different and remainimg bits are same.
+assign full = (last_bit & (w_ptr[PTR_WIDTH-1:0] == r_ptr[PTR_WIDTH-1:0]))?1'b1:1'b0;
+ 
+  //Empty condition: All bits of write and read pointers are same.
+assign empty = (wr_ptr == rd_ptr)? 1'b1:1b'0;
+endmodule;
+
+
+
+
+
+
+
+
+
+
